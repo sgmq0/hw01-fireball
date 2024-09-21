@@ -26,10 +26,8 @@ let cube: Cube;
 let prevTesselations: number = 5;
 
 function loadScene() {
-  square = new Square(vec3.fromValues(0, 0, 0));
-  square.create();
-  cube = new Cube(vec3.fromValues(0, 0, 0), 1);
-  cube.create();
+  icosphere = new Icosphere(vec3.fromValues(0, 0, 0), 1, controls.tesselations);
+  icosphere.create();
 }
 
 function main() {
@@ -99,27 +97,19 @@ function main() {
     if(controls.tesselations != prevTesselations)
     {
       prevTesselations = controls.tesselations;
-      square = new Square(vec3.fromValues(0, 0, 0));
-      square.create();
-      cube = new Cube(vec3.fromValues(0, 0, 0), 1);
-      cube.create();
+      icosphere = new Icosphere(vec3.fromValues(0, 0, 0), 1, prevTesselations);
+      icosphere.create();
     }
 
     color = vec4.fromValues(palette.color[0] / 255, palette.color[1]/255, palette.color[2]/255, 1);
 
     lambert.setGrass(controls['grass amount']);
     lambert.setLightIntensity(controls['light intensity']);
+    lambert.setGeometryColor(color);
+    lambert.setTime(time);
     renderer.render(camera, lambert, [
-      cube,
-    ], color, time);
-
-    grass.setTimeFactor(controls['wiggle speed']);
-    grass.setLightIntensity(controls['light intensity']);
-    renderer.render(camera, grass, [
-      square
-    ], color, time)
-
-    stats.end();
+      icosphere,
+    ]);
 
     // Tell the browser to call `tick` again whenever it renders a new frame
     requestAnimationFrame(tick);
