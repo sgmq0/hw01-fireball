@@ -59,16 +59,10 @@ function main() {
   const gui = new DAT.GUI();
   gui.add(controls, 'tesselations', 0, 8).step(1);
   //gui.add(controls, 'Load Scene');
-
-  var palette = {
-    'primary color': [ 0, 0, 0 ],
-    'secondary color': [165, 0, 66],
-    'tertiary color': [0, 185, 255]
-  };
-
-  gui.addColor(palette, 'primary color');
-  gui.addColor(palette, 'secondary color');
-  gui.addColor(palette, 'tertiary color');
+  
+  gui.addColor(controls, 'primary color');
+  gui.addColor(controls, 'secondary color');
+  gui.addColor(controls, 'tertiary color');
   gui.add(controls, 'noise scale', 0, 5).step(0.1);
   gui.add(controls, 'noise amount', 0, 10).step(0.1);
   gui.add(controls, 'rim amount', 0, 1).step(0.1);
@@ -116,9 +110,9 @@ function main() {
 
     lambert.setTime(time);
 
-    var primary = vec4.fromValues(palette['primary color'][0] / 255, palette['primary color'][1]/255, palette['primary color'][2]/255, 1);
-    var secondary = vec4.fromValues(palette['secondary color'][0] / 255, palette['secondary color'][1]/255, palette['secondary color'][2]/255, 1);
-    var tertiary = vec4.fromValues(palette['tertiary color'][0] / 255, palette['tertiary color'][1]/255, palette['tertiary color'][2]/255, 1);
+    var primary = vec4.fromValues(controls['primary color'][0] / 255, controls['primary color'][1]/255, controls['primary color'][2]/255, 1);
+    var secondary = vec4.fromValues(controls['secondary color'][0] / 255, controls['secondary color'][1]/255, controls['secondary color'][2]/255, 1);
+    var tertiary = vec4.fromValues(controls['tertiary color'][0] / 255, controls['tertiary color'][1]/255, controls['tertiary color'][2]/255, 1);
 
     lambert.setPrimaryColor(primary);
     lambert.setSecondaryColor(secondary);
