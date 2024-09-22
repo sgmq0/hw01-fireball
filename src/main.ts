@@ -7,6 +7,7 @@ import OpenGLRenderer from './rendering/gl/OpenGLRenderer';
 import Camera from './Camera';
 import {setGL} from './globals';
 import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
+import { big_text } from './big_text';
 
 // Define an object with application parameters and button callbacks
 // This will be referred to by dat.GUI's functions that add GUI elements.
@@ -37,6 +38,8 @@ let icosphere: Icosphere;
 let star: Star;
 let prevTesselations: number = 5;
 
+const OBJFile = require('obj-file-parser');
+
 function loadScene() {
   icosphere = new Icosphere(vec3.fromValues(0, 0, 0), 1, controls.tesselations);
   icosphere.create();
@@ -44,7 +47,7 @@ function loadScene() {
   star.create();
 }
 
-function main() {
+async function main() {
   // Initial display for framerate
   const stats = Stats();
   stats.setMode(0);
@@ -81,6 +84,14 @@ function main() {
   // Initial call to load scene
   loadScene();
 
+  // do all the goofy obj stuff here
+  // https://webgl2fundamentals.org/webgl/lessons/webgl-load-obj.html
+  const data = new OBJFile(big_text)
+  const parsed_data = data.parse();
+  
+  const positions = parsed_data.models[0];
+  console.log(positions)
+
   const camera = new Camera(vec3.fromValues(0, 0, 5), vec3.fromValues(0, 0, 0));
 
   const renderer = new OpenGLRenderer(canvas);
@@ -98,7 +109,6 @@ function main() {
     new Shader(gl.VERTEX_SHADER, require('./shaders/lambert-vert.glsl')),
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/lambert-frag.glsl')),
   ]);
-
 
   // This function will be called every frame
   function tick() {
@@ -141,7 +151,6 @@ function main() {
     renderer.render(camera, lambert, [
       star,
     ]);
-
 
     // Tell the browser to call `tick` again whenever it renders a new frame
     requestAnimationFrame(tick);
