@@ -2,8 +2,7 @@ import {vec3, vec4} from 'gl-matrix';
 const Stats = require('stats-js');
 import * as DAT from 'dat.gui';
 import Icosphere from './geometry/Icosphere';
-import Square from './geometry/Square';
-import Cube from './geometry/Cube';
+import Star from './geometry/Star';
 import OpenGLRenderer from './rendering/gl/OpenGLRenderer';
 import Camera from './Camera';
 import {setGL} from './globals';
@@ -15,8 +14,8 @@ const controls = {
   tesselations: 5,
   //'Load Scene': loadScene, // A function pointer, essentially
   'primary color': [ 0, 0, 0 ],
-  'secondary color': [165, 0, 66],
-  'tertiary color': [0, 185, 255],
+  'secondary color': [0, 32, 39],
+  'tertiary color': [114, 0, 0],
   'noise scale': 1,
   'noise amount': 5.0,
   'rim amount': 0.5,
@@ -27,21 +26,22 @@ const controls = {
 
 function resetControls() {
   controls['primary color'] = [0, 0, 0];
-  controls['secondary color'] = [165, 0, 66];
-  controls['tertiary color'] = [0, 185, 255];
+  controls['secondary color'] = [0, 32, 39];
+  controls['tertiary color'] = [114, 0, 0];
   controls['noise scale'] = 1;
   controls['noise amount'] = 5.0;
   controls['rim amount'] = 0.5;
 }
 
 let icosphere: Icosphere;
-let square: Square;
-let cube: Cube;
+let star: Star;
 let prevTesselations: number = 5;
 
 function loadScene() {
   icosphere = new Icosphere(vec3.fromValues(0, 0, 0), 1, controls.tesselations);
   icosphere.create();
+  star = new Star(vec3.fromValues(0,0,0), 1);
+  star.create();
 }
 
 function main() {
@@ -59,7 +59,7 @@ function main() {
   const gui = new DAT.GUI();
   gui.add(controls, 'tesselations', 0, 8).step(1);
   //gui.add(controls, 'Load Scene');
-  
+
   gui.addColor(controls, 'primary color');
   gui.addColor(controls, 'secondary color');
   gui.addColor(controls, 'tertiary color');
@@ -89,10 +89,16 @@ function main() {
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
+  const fireball = new ShaderProgram([
+    new Shader(gl.VERTEX_SHADER, require('./shaders/fireball-vert.glsl')),
+    new Shader(gl.FRAGMENT_SHADER, require('./shaders/fireball-frag.glsl')),
+  ]);
+
   const lambert = new ShaderProgram([
     new Shader(gl.VERTEX_SHADER, require('./shaders/lambert-vert.glsl')),
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/lambert-frag.glsl')),
   ]);
+
 
   // This function will be called every frame
   function tick() {
@@ -108,28 +114,34 @@ function main() {
       icosphere.create();
     }
 
-    lambert.setTime(time);
+    fireball.setTime(time);
 
     var primary = vec4.fromValues(controls['primary color'][0] / 255, controls['primary color'][1]/255, controls['primary color'][2]/255, 1);
     var secondary = vec4.fromValues(controls['secondary color'][0] / 255, controls['secondary color'][1]/255, controls['secondary color'][2]/255, 1);
     var tertiary = vec4.fromValues(controls['tertiary color'][0] / 255, controls['tertiary color'][1]/255, controls['tertiary color'][2]/255, 1);
 
-    lambert.setPrimaryColor(primary);
-    lambert.setSecondaryColor(secondary);
-    lambert.setTertiaryColor(tertiary);
-    lambert.setColorNoiseScale(controls['noise scale']);
-    lambert.setColorNoiseHeight(controls['noise amount']);
-    lambert.setRimAmount(controls['rim amount']);
+    fireball.setPrimaryColor(primary);
+    fireball.setSecondaryColor(secondary);
+    fireball.setTertiaryColor(tertiary);
+    fireball.setColorNoiseScale(controls['noise scale']);
+    fireball.setColorNoiseHeight(controls['noise amount']);
+    fireball.setRimAmount(controls['rim amount']);
 
     // get the viewdir of the camera
     let viewdir = vec3.create();
     vec3.subtract(viewdir, camera.controls.center, camera.controls.eye);
     let viewdir2 = vec4.fromValues(viewdir[0], viewdir[1], viewdir[2], 1);
 
-    lambert.setViewDir(viewdir2);
-    renderer.render(camera, lambert, [
+    fireball.setViewDir(viewdir2);
+    renderer.render(camera, fireball, [
       icosphere,
     ]);
+
+    lambert.setPrimaryColor(primary);
+    renderer.render(camera, lambert, [
+      star,
+    ]);
+
 
     // Tell the browser to call `tick` again whenever it renders a new frame
     requestAnimationFrame(tick);
