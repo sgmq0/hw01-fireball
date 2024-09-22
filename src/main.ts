@@ -14,10 +14,24 @@ import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 const controls = {
   tesselations: 5,
   //'Load Scene': loadScene, // A function pointer, essentially
-  color: [ 0, 255, 4 ],
-  'wiggle speed': 1,
-  'grass amount': 0.5,
-  'light intensity': 0.5,
+  'primary color': [ 0, 0, 0 ],
+  'secondary color': [165, 0, 66],
+  'tertiary color': [0, 185, 255],
+  'noise scale': 1,
+  'noise amount': 5.0,
+  'rim amount': 0.5,
+  buttonAction: function() {
+    resetControls();
+  }
+}
+
+function resetControls() {
+  controls['primary color'] = [0, 0, 0];
+  controls['secondary color'] = [165, 0, 66];
+  controls['tertiary color'] = [0, 185, 255];
+  controls['noise scale'] = 1;
+  controls['noise amount'] = 5.0;
+  controls['rim amount'] = 0.5;
 }
 
 let icosphere: Icosphere;
@@ -47,13 +61,18 @@ function main() {
   //gui.add(controls, 'Load Scene');
 
   var palette = {
-    color: [ 0, 255, 0 ]
+    'primary color': [ 0, 0, 0 ],
+    'secondary color': [165, 0, 66],
+    'tertiary color': [0, 185, 255]
   };
 
-  gui.addColor(palette, 'color');
-  gui.add(controls, 'wiggle speed', 0, 10).step(0.5);
-  gui.add(controls, 'grass amount', 0, 1).step(0.1);
-  gui.add(controls, 'light intensity', 0, 1).step(0.1);
+  gui.addColor(palette, 'primary color');
+  gui.addColor(palette, 'secondary color');
+  gui.addColor(palette, 'tertiary color');
+  gui.add(controls, 'noise scale', 0, 5).step(0.1);
+  gui.add(controls, 'noise amount', 0, 10).step(0.1);
+  gui.add(controls, 'rim amount', 0, 1).step(0.1);
+  gui.add(controls, 'buttonAction').name('Reset to default');
 
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
@@ -73,19 +92,13 @@ function main() {
   const renderer = new OpenGLRenderer(canvas);
   renderer.setClearColor(0.2, 0.2, 0.2, 1);
   gl.enable(gl.DEPTH_TEST);
-  gl.enable(gl.SAMPLE_ALPHA_TO_COVERAGE)
-
-  var color = vec4.fromValues(palette.color[0] / 255, palette.color[1]/255, palette.color[2]/255, 1);
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
   const lambert = new ShaderProgram([
     new Shader(gl.VERTEX_SHADER, require('./shaders/lambert-vert.glsl')),
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/lambert-frag.glsl')),
   ]);
-
-  const grass = new ShaderProgram([
-    new Shader(gl.VERTEX_SHADER, require('./shaders/grass-vert.glsl')),
-    new Shader(gl.FRAGMENT_SHADER, require('./shaders/grass-frag.glsl')),
-  ])
 
   // This function will be called every frame
   function tick() {
@@ -101,12 +114,25 @@ function main() {
       icosphere.create();
     }
 
-    color = vec4.fromValues(palette.color[0] / 255, palette.color[1]/255, palette.color[2]/255, 1);
-
-    lambert.setGrass(controls['grass amount']);
-    lambert.setLightIntensity(controls['light intensity']);
-    lambert.setGeometryColor(color);
     lambert.setTime(time);
+
+    var primary = vec4.fromValues(palette['primary color'][0] / 255, palette['primary color'][1]/255, palette['primary color'][2]/255, 1);
+    var secondary = vec4.fromValues(palette['secondary color'][0] / 255, palette['secondary color'][1]/255, palette['secondary color'][2]/255, 1);
+    var tertiary = vec4.fromValues(palette['tertiary color'][0] / 255, palette['tertiary color'][1]/255, palette['tertiary color'][2]/255, 1);
+
+    lambert.setPrimaryColor(primary);
+    lambert.setSecondaryColor(secondary);
+    lambert.setTertiaryColor(tertiary);
+    lambert.setColorNoiseScale(controls['noise scale']);
+    lambert.setColorNoiseHeight(controls['noise amount']);
+    lambert.setRimAmount(controls['rim amount']);
+
+    // get the viewdir of the camera
+    let viewdir = vec3.create();
+    vec3.subtract(viewdir, camera.controls.center, camera.controls.eye);
+    let viewdir2 = vec4.fromValues(viewdir[0], viewdir[1], viewdir[2], 1);
+
+    lambert.setViewDir(viewdir2);
     renderer.render(camera, lambert, [
       icosphere,
     ]);

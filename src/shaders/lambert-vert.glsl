@@ -38,10 +38,79 @@ out float fs_LightIntensity;
 const vec4 lightPos = vec4(5, 5, 3, 1); //The position of our virtual light, which is used to compute the shading of
                                         //the geometry in the fragment shader.
 
+// fbm noise code from https://thebookofshaders.com/13/
+float random (in vec2 st) {
+    return fract(sin(dot(st.xy,
+                         vec2(12.9898,78.233)))*
+        43758.5453123);
+}
+
+// Based on Morgan McGuire @morgan3d
+// https://www.shadertoy.com/view/4dS3Wd
+float noise (in vec2 st) {
+    vec2 i = floor(st);
+    vec2 f = fract(st);
+
+    // Four corners in 2D of a tile
+    float a = random(i);
+    float b = random(i + vec2(1.0, 0.0));
+    float c = random(i + vec2(0.0, 1.0));
+    float d = random(i + vec2(1.0, 1.0));
+
+    vec2 u = f * f * (3.0 - 2.0 * f);
+
+    return mix(a, b, u.x) +
+            (c - a)* u.y * (1.0 - u.x) +
+            (d - b) * u.x * u.y;
+}
+
+#define OCTAVES 6
+float fbm (in vec2 st) {
+    // Initial values
+    float value = 0.0;
+    float amplitude = .5;
+    float frequency = 0.;
+    //
+    // Loop of octaves
+    for (int i = 0; i < OCTAVES; i++) {
+        value += amplitude * noise(st);
+        st *= 2.;
+        amplitude *= .5;
+    }
+    return value;
+}
+
+float bias (float b, float t) {
+    return pow(t, log(b) / log(0.5));
+}
+
+float cubicPulse (float c, float w, float x) {
+    x = abs(x - c);
+    if (x > w) return 0.0;
+    x /= w;
+    return 1.0 - x * x * (3.0 - 2.0 * x);
+}
+
+float gain(float g, float t) {
+    if (t < 0.5) {
+        return bias(1.0-g, 2.0*t) / 2.0;
+    } else {
+        return 1.0 - bias(1.0 - g, 2.0 - 2.0 * t) / 2.0;
+    }
+}
+
+float sawtooth_wave(float x, float freq, float amplitude) {
+    return (x * freq - floor(x * freq)) * amplitude;
+}
+
+float impulse(float k, float x) {
+    float h = k*x;
+    return h * exp(1.0 - h);
+}
+
 void main()
 {
     fs_Col = vs_Col;                         // Pass the vertex colors to the fragment shader for interpolation
-    fs_Pos = vs_Pos;
     fs_Time = u_Time;
     fs_Grass = u_GrassPercent;
     fs_LightIntensity = u_LightIntensity;
@@ -53,8 +122,31 @@ void main()
                                                             // perpendicular to the surface after the surface is transformed by
                                                             // the model matrix.
 
+    vec4 position = vs_Pos;
 
-    vec4 modelposition = u_Model * vs_Pos;   // Temporarily store the transformed vertex positions for use below
+    // here's where i do all the fancy vertex shader stuff
+    // formula: sin((position.x + speed * u_Time) * frequency) * amplitude + displacement;
+
+    // displace along normals for the rest of body
+    position += fs_Nor * (sin((position.x + 0.01 * u_Time) * 10.0) * 0.025 + .1);
+    position += fs_Nor * (sin((-position.y + 0.01 * (u_Time + 2.0)) * 10.0) * 0.05 + .1);
+    position += fs_Nor * (sin((-position.z + 0.01 * (u_Time + 2.0)) * 10.0) * 0.025 + .1);
+
+    // displace along additional fbm
+    vec2 fbm_coords = vec2(position.x + u_Time * 0.01, position.z + u_Time * 0.01);
+    float displacement_amt = bias(0.2, (position.y + 2.0) / 2.0);
+    position.y += (3.0*fbm(fbm_coords) - 0.5) * displacement_amt;
+
+    // stretch to make a pointed tip
+    position.xz *= sqrt(-(position.y - 7.0) / 2.0);
+    position.y *= 1.5;
+
+    // make the top bit wavy
+    position.x += (sin(position.y + u_Time * 0.1) * 0.1) * displacement_amt;
+    position.z += (sin(position.y + u_Time * 0.1) * 0.1) * displacement_amt;
+
+    vec4 modelposition = u_Model * position;   // Temporarily store the transformed vertex positions for use below
+    fs_Pos = modelposition;
 
     fs_LightVec = lightPos - modelposition;  // Compute the direction in which the light source lies
 

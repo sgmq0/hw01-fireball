@@ -28,11 +28,16 @@ class ShaderProgram {
   unifModel: WebGLUniformLocation;
   unifModelInvTr: WebGLUniformLocation;
   unifViewProj: WebGLUniformLocation;
-  unifColor: WebGLUniformLocation;
   unifTime: WebGLUniformLocation;
   unifTimeFactor: WebGLUniformLocation;
-  unifGrass: WebGLUniformLocation;
-  unifLightIntensity: WebGLUniformLocation;
+  unifViewDir: WebGLUniformLocation;
+
+  unifColorPrimary: WebGLUniformLocation;
+  unifColorSecondary: WebGLUniformLocation;
+  unifColorTertiary: WebGLUniformLocation;
+  unifColorNoiseScale: WebGLUniformLocation;
+  unifColorNoiseHeight: WebGLUniformLocation;
+  unifRimAmount: WebGLUniformLocation;
 
   constructor(shaders: Array<Shader>) {
     this.prog = gl.createProgram();
@@ -51,11 +56,16 @@ class ShaderProgram {
     this.unifModel      = gl.getUniformLocation(this.prog, "u_Model");
     this.unifModelInvTr = gl.getUniformLocation(this.prog, "u_ModelInvTr");
     this.unifViewProj   = gl.getUniformLocation(this.prog, "u_ViewProj");
-    this.unifColor      = gl.getUniformLocation(this.prog, "u_Color");
     this.unifTime       = gl.getUniformLocation(this.prog, "u_Time");
     this.unifTimeFactor = gl.getUniformLocation(this.prog, "u_TimeFactor");
-    this.unifGrass = gl.getUniformLocation(this.prog, "u_GrassPercent");
-    this.unifLightIntensity = gl.getUniformLocation(this.prog, "u_LightIntensity");
+    this.unifViewDir = gl.getUniformLocation(this.prog, "u_ViewDir");
+
+    this.unifColorPrimary   = gl.getUniformLocation(this.prog, "u_ColorPrimary");
+    this.unifColorSecondary = gl.getUniformLocation(this.prog, "u_ColorSecondary");
+    this.unifColorTertiary  = gl.getUniformLocation(this.prog, "u_ColorTertiary");
+    this.unifColorNoiseScale  = gl.getUniformLocation(this.prog, "u_ColorNoiseScale");
+    this.unifColorNoiseHeight  = gl.getUniformLocation(this.prog, "u_ColorNoiseHeight");
+    this.unifRimAmount  = gl.getUniformLocation(this.prog, "u_RimAmount");
   }
 
   use() {
@@ -86,13 +96,6 @@ class ShaderProgram {
     }
   }
 
-  setGeometryColor(color: vec4) {
-    this.use();
-    if (this.unifColor !== -1) {
-      gl.uniform4fv(this.unifColor, color);
-    }
-  }
-
   setTime(time: GLfloat) {
     this.use();
     if (this.unifTime !== -1) {
@@ -107,17 +110,52 @@ class ShaderProgram {
     }
   }
 
-  setGrass(grassPercent: GLfloat) {
+  setViewDir(direction: vec4) {
     this.use();
-    if (this.unifGrass !== -1) {
-      gl.uniform1f(this.unifGrass, grassPercent);
+    if (this.unifViewDir !== -1) {
+      gl.uniform4fv(this.unifViewDir, direction);
     }
   }
 
-  setLightIntensity(intensity: GLfloat) {
+  setPrimaryColor(color: vec4) {
     this.use();
-    if (this.unifLightIntensity !== -1) {
-      gl.uniform1f(this.unifLightIntensity, intensity);
+    if (this.unifColorPrimary !== -1) {
+      gl.uniform4fv(this.unifColorPrimary, color);
+    }
+  }
+
+  setSecondaryColor(color: vec4) {
+    this.use();
+    if (this.unifColorSecondary !== -1) {
+      gl.uniform4fv(this.unifColorSecondary, color);
+    }
+  }
+
+  setTertiaryColor(color: vec4) {
+    this.use();
+    if (this.unifColorTertiary !== -1) {
+      gl.uniform4fv(this.unifColorTertiary, color);
+    }
+  }
+
+  setColorNoiseScale(scaleAmt: GLfloat) {
+    this.use();
+    if (this.unifColorNoiseScale !== -1) {
+      gl.uniform1f(this.unifColorNoiseScale, scaleAmt);
+    }
+  }
+
+  setColorNoiseHeight(height: GLfloat) {
+    this.use();
+    if (this.unifColorNoiseHeight !== -1) {
+      gl.uniform1f(this.unifColorNoiseHeight, height);
+    }
+  }
+
+  setRimAmount(amount: GLfloat) {
+    this.use();
+    if (this.unifRimAmount !== -1) {
+      gl.uniform1f(this.unifRimAmount, amount);
     }
   }
 

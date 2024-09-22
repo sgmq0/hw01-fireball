@@ -11,7 +11,14 @@
 // position, light position, and vertex color.
 precision highp float;
 
-uniform vec4 u_Color; // The color with which to render this instance of geometry.
+uniform vec4 u_ColorPrimary; // The color with which to render this instance of geometry.
+uniform vec4 u_ColorSecondary;
+uniform vec4 u_ColorTertiary;
+uniform vec4 u_ViewDir;
+uniform float u_Time;
+uniform float u_ColorNoiseScale;
+uniform float u_ColorNoiseHeight;
+uniform float u_RimAmount;
 
 // These are the interpolated values out of the rasterizer, so you can't know
 // their specific values without knowing the vertices that contributed to them
@@ -19,9 +26,6 @@ in vec4 fs_Nor;
 in vec4 fs_LightVec;
 in vec4 fs_Col;
 in vec4 fs_Pos;
-in float fs_Time;
-in float fs_Grass;
-in float fs_LightIntensity;
 
 out vec4 out_Col; // This is the final output color that you will see on your
                   // screen for the pixel that is currently being processed.
@@ -193,47 +197,36 @@ float noisyColor(vec3 xyz) {
   return n;
 }
 
+float bias (float b, float t) {
+    return pow(t, log(b) / log(0.5));
+}
+
 void main()
 {
     // Material base color (before shading)
-    vec4 diffuseColor = u_Color;
+    vec4 diffuseColor = u_ColorPrimary;
 
     // Calculate the diffuse term for Lambert shading
     float diffuseTerm = dot(normalize(fs_Nor), normalize(fs_LightVec));
     // Avoid negative lighting values
     diffuseTerm = clamp(diffuseTerm, 0.0, 1.0);
 
-    float ambientTerm = fs_LightIntensity;
+    // compute alpha, do a fresnel effect
+    float alpha = 1.0;
+    float fresnel = abs(dot(fs_Nor.xyz, normalize(u_ViewDir.xyz)));
+    fresnel = bias(0.5, fresnel);
 
-    float lightIntensity = diffuseTerm + ambientTerm;   //Add a small float value to the color multiplier
-                                                        //to simulate ambient lighting. This ensures that faces that are not
-                                                        //lit by our point light are not completely black.
+    float displacement_amt = bias(0.2, (fs_Pos.y + 2.0) / (10.0 - u_ColorNoiseHeight));
 
-    // Compute final shaded color
-    vec4 diffuseShaded = vec4(diffuseColor.rgb * lightIntensity, diffuseColor.a);
+    vec3 position = vec3(fs_Pos.x, fs_Pos.y + -u_Time * 0.01, fs_Pos.z);
+    float noise = noisyColor(position * (u_ColorNoiseScale) * 0.2);
+    noise = 0.5f + 0.5f * noise;
 
-    //grass
-    float grassNoise = noisyColor(fs_Pos.xyz * 5.f);
-    grassNoise = mix(0.0f, 0.5f + 0.5f * grassNoise, fs_Pos.y - 0.4 + 0.2 * fs_Grass);
-    float grassNoise2 = 1.0;
-    grassNoise2 = mix(0.0f, 0.5f + 0.5f * grassNoise2, fs_Pos.y + fs_Grass);
+    vec4 mainColor = mix(u_ColorPrimary, u_ColorTertiary * displacement_amt, noise);
 
-    //dirt
-    float dirtNoise = noisyColor(fs_Pos.xyz * 5.f);
-    dirtNoise = 0.5f + 0.5f * dirtNoise;
-    float dirtNoise2 = noisyColor(fs_Pos.xyz * 10.f);
-    //dirtNoise2 = mix(0.0f, 0.5f + 0.5f * dirtNoise2, -fs_Pos.y + 0.5f);
-    dirtNoise2 = smoothstep(0.4f, 0.7f, dirtNoise2);
-
-    vec3 grassColor = mix(vec3(0.0f, 0.0f, 0.0f), diffuseColor.rgb, grassNoise);
-    grassColor = clamp(grassColor, vec3(0.0f), vec3(1.0f));
-    vec3 grassColor2 = mix(vec3(1.0f, 1.0f, 1.0f), diffuseColor.rgb, grassNoise2);
-    grassColor2 = clamp(grassColor2, vec3(0.0f), vec3(1.0f));
-
-    vec3 dirtColor = mix(vec3(137.0 / 255.0, 99.0 / 255.0, 52.0 / 255.0), vec3(72.0 / 255.0, 47.0 / 255.0, 24.0 / 255.0), dirtNoise);
-    vec3 dirtColor2 = mix(vec3(0.0), vec3(24.0 / 255.0, 10.0 / 255.0, 10.0 / 255.0), dirtNoise2);
+    diffuseColor = mix(mix(u_ColorSecondary, mainColor, 1.0 - u_RimAmount), mainColor, fresnel);
 
     //out_Col = vec4(dirtColor, 1.0);
-    vec4 result = vec4((dirtColor + dirtColor2) * grassColor2 + grassColor, 1.0);
-    out_Col = vec4(result.rgb * lightIntensity, result.a);
+    vec4 result = vec4(diffuseColor.rgb, fresnel);
+    out_Col = result;
 }
