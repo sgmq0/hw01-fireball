@@ -4,6 +4,8 @@
 
 Get comfortable with using WebGL and its shaders to generate an interesting 3D, continuous surface using a multi-octave noise algorithm.
 
+test commit...
+
 ## Getting Started
 
 1. Fork and clone [this repository](https://github.com/CIS700-Procedural-Graphics/Project1-Noise).
