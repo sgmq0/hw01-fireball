@@ -2,24 +2,38 @@ import {vec3, vec4} from 'gl-matrix';
 import Drawable from '../rendering/gl/Drawable';
 import {gl} from '../globals';
 
-class Star extends Drawable {
+class Silly extends Drawable {
   buffer: ArrayBuffer;
   indices: Uint32Array;
   positions: Float32Array;
   normals: Float32Array;
   center: vec4;
 
-  constructor(center: vec3, public radius: number) {
+  input_positions: Array<Object>;
+  input_normals: Array<Object>;
+  input_faces: Array<Object>;
+
+  constructor(center: vec3, public radius: number, 
+    input_positions: Array<Object>, input_normals: Array<Object>, input_faces: Array<Object>) {
     super(); // Call the constructor of the super class. This is required.
     this.center = vec4.fromValues(center[0], center[1], center[2], 1);
+    this.input_positions = input_positions;
+    this.input_normals = input_normals;
+    this.input_faces = input_faces;
+  }
+
+  debug() {
+    console.log(this.input_positions);
+    console.log(this.input_normals);
+    console.log(this.input_faces);
   }
 
   create() {
-    const S = 1.5;
-    const S2 = S / 6;
+    let S = 1;
+    let S2 = 0.4;
 
-    let maxIndexCount = 16;
-    let maxVertexCount = 10;
+    let maxIndexCount = this.input_faces.length * 2;
+    let maxVertexCount = this.input_positions.length;
 
     // Create buffers to back geometry data
     // Index data will ping pong back and forth between buffer0 and buffer1 during creation
@@ -55,36 +69,23 @@ class Star extends Drawable {
     }
 
     // Initialize normals
-    vertices[0].set([ 0, S, 0, 0 ]);
-    vertices[1].set([ S * 0.75, 0, 0, 0 ]);
-    vertices[2].set([ 0, -S, 0, 0 ]);
-    vertices[3].set([ -S * 0.75, 0, 0, 0 ]);
+    for (let i = 0; i < maxVertexCount; ++i) {
+      let item: any = this.input_positions[i];
+      vertices[i].set([item.x, item.y, item.z, 0]);
+    }
 
-    vertices[4].set([ -S2, S2, 0, 0 ]);
-    vertices[5].set([ S2, S2, 0, 0 ]);
-    vertices[6].set([ S2, -S2, 0, 0 ]);
-    vertices[7].set([ -S2, -S2, 0, 0 ]);
-
-    vertices[8].set([ 0, 0, S2, 0 ]);
-    vertices[9].set([ 0, 0, -S2, 0 ]);
+    console.log(vertices);
 
     // Initialize indices
-    triangles[0].set([ 0,5,8 ]);
-    triangles[1].set([ 5,1,8 ]);
-    triangles[2].set([ 1,6,8 ]);
-    triangles[3].set([ 6,2,8 ]);
-    triangles[4].set([ 2,7,8 ]);
-    triangles[5].set([ 7,3,8 ]);
-    triangles[6].set([ 3,4,8 ]);
-    triangles[7].set([ 4,0,8 ]);
-    triangles[8].set([ 0,5,9 ]);
-    triangles[9].set([ 5,1,9 ]);
-    triangles[10].set([ 1,6,9 ]);
-    triangles[11].set([ 6,2,9 ]);
-    triangles[12].set([ 2,7,9 ]);
-    triangles[13].set([ 7,3,9 ]);
-    triangles[14].set([ 3,4,9 ]);
-    triangles[15].set([ 4,0,9 ]);
+    // only works when all polygons are quads btw
+    for (let i = 0; i < maxIndexCount / 2; ++i) {
+      let face: any = this.input_faces[i];
+      let verts = face.vertices;
+      let idx = verts.map((obj: { vertexIndex: any; }) => obj.vertexIndex - 1);
+
+      triangles[i].set([idx[0], idx[1], idx[2]]);
+      triangles[i + maxIndexCount / 2].set([idx[0], idx[2], idx[3]]);
+    }
 
     // Populate one position for each normal
     for (let i = 0; i < vertices.length; ++i) {
@@ -115,4 +116,4 @@ class Star extends Drawable {
   }
 };
 
-export default Star;
+export default Silly;

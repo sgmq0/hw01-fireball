@@ -14,6 +14,7 @@ precision highp float;
 uniform vec4 u_ColorPrimary; // The color with which to render this instance of geometry.
 uniform vec4 u_ColorSecondary;
 uniform vec4 u_ColorTertiary;
+uniform vec4 u_ColorStar;
 uniform vec4 u_ViewDir;
 uniform float u_Time;
 uniform float u_ColorNoiseScale;
@@ -226,7 +227,17 @@ void main()
 
     diffuseColor = mix(mix(u_ColorSecondary, mainColor, 1.0 - u_RimAmount), mainColor, fresnel);
 
-    //out_Col = vec4(dirtColor, 1.0);
+    // now do the goofy star glow stuff
+    vec3 star_pos = vec3(0.0, 0.3, 2.2);
+    float dist = distance(fs_Pos.xyz, star_pos);
+
+    float falloff = 0.8;
+    dist = clamp(dist, 0.0, falloff);
+    dist /= falloff;
+    float glow_amt = mix(1.0,0.0, dist);
+
+    diffuseColor = mix(diffuseColor, u_ColorStar, glow_amt);
+    
     vec4 result = vec4(diffuseColor.rgb, fresnel);
     out_Col = result;
 }

@@ -3,6 +3,7 @@ const Stats = require('stats-js');
 import * as DAT from 'dat.gui';
 import Icosphere from './geometry/Icosphere';
 import Star from './geometry/Star';
+import Silly from './geometry/Silly';
 import OpenGLRenderer from './rendering/gl/OpenGLRenderer';
 import Camera from './Camera';
 import {setGL} from './globals';
@@ -15,8 +16,9 @@ const controls = {
   tesselations: 5,
   //'Load Scene': loadScene, // A function pointer, essentially
   'primary color': [ 0, 0, 0 ],
-  'secondary color': [0, 32, 39],
+  'secondary color': [0, 174, 211],
   'tertiary color': [114, 0, 0],
+  'star color': [255, 200, 0],
   'noise scale': 1,
   'noise amount': 5.0,
   'rim amount': 0.5,
@@ -27,8 +29,9 @@ const controls = {
 
 function resetControls() {
   controls['primary color'] = [0, 0, 0];
-  controls['secondary color'] = [0, 32, 39];
+  controls['secondary color'] = [0, 174, 211];
   controls['tertiary color'] = [114, 0, 0];
+  controls['star color'] = [255,200,0];
   controls['noise scale'] = 1;
   controls['noise amount'] = 5.0;
   controls['rim amount'] = 0.5;
@@ -66,6 +69,7 @@ async function main() {
   gui.addColor(controls, 'primary color');
   gui.addColor(controls, 'secondary color');
   gui.addColor(controls, 'tertiary color');
+  gui.addColor(controls, 'star color');
   gui.add(controls, 'noise scale', 0, 5).step(0.1);
   gui.add(controls, 'noise amount', 0, 10).step(0.1);
   gui.add(controls, 'rim amount', 0, 1).step(0.1);
@@ -84,13 +88,19 @@ async function main() {
   // Initial call to load scene
   loadScene();
 
-  // do all the goofy obj stuff here
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ do all the goofy obj stuff here ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // https://webgl2fundamentals.org/webgl/lessons/webgl-load-obj.html
   const data = new OBJFile(big_text)
   const parsed_data = data.parse();
   
-  const positions = parsed_data.models[0];
-  console.log(positions)
+  const new_data = parsed_data.models[0];
+  const positions = new_data.vertices;
+  const normals = new_data.vertexNormals;
+  const faces = new_data.faces;
+  console.log(new_data)
+
+  let silly = new Silly(vec3.fromValues(0,0,0), 1, positions, normals, faces);
+  silly.create();
 
   const camera = new Camera(vec3.fromValues(0, 0, 5), vec3.fromValues(0, 0, 0));
 
@@ -129,10 +139,12 @@ async function main() {
     var primary = vec4.fromValues(controls['primary color'][0] / 255, controls['primary color'][1]/255, controls['primary color'][2]/255, 1);
     var secondary = vec4.fromValues(controls['secondary color'][0] / 255, controls['secondary color'][1]/255, controls['secondary color'][2]/255, 1);
     var tertiary = vec4.fromValues(controls['tertiary color'][0] / 255, controls['tertiary color'][1]/255, controls['tertiary color'][2]/255, 1);
+    var star_color = vec4.fromValues(controls['star color'][0] / 255, controls['star color'][1]/255, controls['star color'][2]/255, 1);
 
     fireball.setPrimaryColor(primary);
     fireball.setSecondaryColor(secondary);
     fireball.setTertiaryColor(tertiary);
+    fireball.setStarColor(star_color);
     fireball.setColorNoiseScale(controls['noise scale']);
     fireball.setColorNoiseHeight(controls['noise amount']);
     fireball.setRimAmount(controls['rim amount']);
@@ -144,12 +156,12 @@ async function main() {
 
     fireball.setViewDir(viewdir2);
     renderer.render(camera, fireball, [
-      icosphere,
+      
     ]);
 
-    lambert.setPrimaryColor(primary);
+    lambert.setPrimaryColor(star_color);
     renderer.render(camera, lambert, [
-      star,
+      silly,
     ]);
 
     // Tell the browser to call `tick` again whenever it renders a new frame

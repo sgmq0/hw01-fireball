@@ -35,6 +35,7 @@ class ShaderProgram {
   unifColorPrimary: WebGLUniformLocation;
   unifColorSecondary: WebGLUniformLocation;
   unifColorTertiary: WebGLUniformLocation;
+  unifColorStar: WebGLUniformLocation;
   unifColorNoiseScale: WebGLUniformLocation;
   unifColorNoiseHeight: WebGLUniformLocation;
   unifRimAmount: WebGLUniformLocation;
@@ -63,6 +64,7 @@ class ShaderProgram {
     this.unifColorPrimary   = gl.getUniformLocation(this.prog, "u_ColorPrimary");
     this.unifColorSecondary = gl.getUniformLocation(this.prog, "u_ColorSecondary");
     this.unifColorTertiary  = gl.getUniformLocation(this.prog, "u_ColorTertiary");
+    this.unifColorStar      = gl.getUniformLocation(this.prog, "u_ColorStar");
     this.unifColorNoiseScale  = gl.getUniformLocation(this.prog, "u_ColorNoiseScale");
     this.unifColorNoiseHeight  = gl.getUniformLocation(this.prog, "u_ColorNoiseHeight");
     this.unifRimAmount  = gl.getUniformLocation(this.prog, "u_RimAmount");
@@ -135,6 +137,13 @@ class ShaderProgram {
     this.use();
     if (this.unifColorTertiary !== -1) {
       gl.uniform4fv(this.unifColorTertiary, color);
+    }
+  }
+
+  setStarColor(color: vec4) {
+    this.use();
+    if (this.unifColorStar !== -1) {
+      gl.uniform4fv(this.unifColorStar, color);
     }
   }
 
