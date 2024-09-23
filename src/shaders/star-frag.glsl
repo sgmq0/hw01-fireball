@@ -12,11 +12,18 @@ precision highp float;
 uniform vec4 u_ColorPrimary; // The color with which to render this instance of geometry.
 // These are the interpolated values out of the rasterizer, so you can't know
 // their specific values without knowing the vertices that contributed to them
+uniform float u_Time;
+
 in vec4 fs_Nor;
 in vec4 fs_LightVec;
 in vec4 fs_Col;
 out vec4 out_Col; // This is the final output color that you will see on your
                   // screen for the pixel that is currently being processed.
+
+float square_wave(float x, float freq, float amplitude) {
+    return abs(mod(floor(x * freq), 2.0) * amplitude);
+}
+
 void main()
 {
     // Material base color (before shading)
@@ -30,5 +37,11 @@ void main()
                                                         //to simulate ambient lighting. This ensures that faces that are not
                                                         //lit by our point light are not completely black.
     // Compute final shaded color
-    out_Col = diffuseColor;
+
+    vec4 glow_col = vec4(diffuseColor.rgb + 0.05, 1.0);
+
+    float col = square_wave(sin(u_Time * 0.9), 0.1, 1.0);
+    vec4 result = mix(diffuseColor, glow_col, col);
+
+    out_Col = result;
 }

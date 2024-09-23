@@ -168,6 +168,7 @@ async function main() {
     }
 
     fireball.setTime(time);
+    lambert.setTime(time);
 
     var primary = vec4.fromValues(controls['primary color'][0] / 255, controls['primary color'][1]/255, controls['primary color'][2]/255, 1);
     var secondary = vec4.fromValues(controls['secondary color'][0] / 255, controls['secondary color'][1]/255, controls['secondary color'][2]/255, 1);

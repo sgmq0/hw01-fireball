@@ -108,6 +108,18 @@ float impulse(float k, float x) {
     return h * exp(1.0 - h);
 }
 
+float ease_in_quadratic(float t) {
+    return t * t;
+}
+
+float ease_in_out_quadratic(float t) {
+    if (t < 0.5) {
+        return ease_in_quadratic(t * 2.0) / 2.0;
+    } else {
+        return 1.0 - ease_in_quadratic((1.0 - t) * 2.0) / 2.0;
+    }
+}
+
 void main()
 {
     fs_Col = vs_Col;                         // Pass the vertex colors to the fragment shader for interpolation
@@ -143,7 +155,11 @@ void main()
 
     // make the top bit wavy
     position.x += (sin(position.y + u_Time * 0.1) * 0.1) * displacement_amt;
+    position.x += (sin(position.y + u_Time * 0.2) * 0.03) * displacement_amt;
     position.z += (sin(position.y + u_Time * 0.1) * 0.1) * displacement_amt;
+    position.x += (sin(position.y + u_Time * 0.15) * 0.02) * displacement_amt;
+
+    position.y += ease_in_out_quadratic(sin(u_Time * 0.02)) * 0.5;
 
     vec4 modelposition = u_Model * position;   // Temporarily store the transformed vertex positions for use below
     fs_Pos = modelposition;

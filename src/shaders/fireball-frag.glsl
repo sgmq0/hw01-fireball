@@ -202,6 +202,22 @@ float bias (float b, float t) {
     return pow(t, log(b) / log(0.5));
 }
 
+float triangle_wave(float x, float freq, float amplitude) {
+  return abs(mod((x * freq), amplitude) - (0.5 * amplitude));
+}
+
+float ease_in_quadratic(float t) {
+    return t * t;
+}
+
+float ease_in_out_quadratic(float t) {
+    if (t < 0.5) {
+        return ease_in_quadratic(t * 2.0) / 2.0;
+    } else {
+        return 1.0 - ease_in_quadratic((1.0 - t) * 2.0) / 2.0;
+    }
+}
+
 void main()
 {
     // Material base color (before shading)
@@ -215,7 +231,6 @@ void main()
     // compute alpha, do a fresnel effect
     float alpha = 1.0;
     float fresnel = abs(dot(fs_Nor.xyz, normalize(u_ViewDir.xyz)));
-    fresnel = bias(0.5, fresnel);
 
     float displacement_amt = bias(0.2, (fs_Pos.y + 2.0) / (10.0 - u_ColorNoiseHeight));
 
@@ -229,9 +244,11 @@ void main()
 
     // now do the goofy star glow stuff
     vec3 star_pos = vec3(0.0, 0.3, 2.2);
+    star_pos.y += ease_in_out_quadratic(sin(u_Time * 0.02)) * 0.2;
+
     float dist = distance(fs_Pos.xyz, star_pos);
 
-    float falloff = 0.8;
+    float falloff = triangle_wave(u_Time, 0.01, 1.0) + .5;
     dist = clamp(dist, 0.0, falloff);
     dist /= falloff;
     float glow_amt = mix(1.0,0.0, dist);

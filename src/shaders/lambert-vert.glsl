@@ -14,6 +14,8 @@ uniform mat4 u_ModelInvTr;  // The inverse transpose of the model matrix.
 uniform mat4 u_ViewProj;    // The matrix that defines the camera's transformation.
                             // We've written a static matrix for you to use for HW2,
                             // but in HW3 you'll have to generate one yourself
+uniform float u_Time;
+
 in vec4 vs_Pos;             // The array of vertex positions passed to the shader
 in vec4 vs_Nor;             // The array of vertex normals passed to the shader
 in vec4 vs_Col;             // The array of vertex colors passed to the shader.
@@ -22,6 +24,19 @@ out vec4 fs_LightVec;       // The direction in which our virtual light lies, re
 out vec4 fs_Col;            // The color of each vertex. This is implicitly passed to the fragment shader.
 const vec4 lightPos = vec4(5, 5, 3, 1); //The position of our virtual light, which is used to compute the shading of
                                         //the geometry in the fragment shader.
+
+float ease_in_quadratic(float t) {
+    return t * t;
+}
+
+float ease_in_out_quadratic(float t) {
+    if (t < 0.5) {
+        return ease_in_quadratic(t * 2.0) / 2.0;
+    } else {
+        return 1.0 - ease_in_quadratic((1.0 - t) * 2.0) / 2.0;
+    }
+}
+
 void main()
 {
     fs_Col = vs_Col;                         // Pass the vertex colors to the fragment shader for interpolation
@@ -35,6 +50,8 @@ void main()
     vec4 position = vs_Pos;
     position.z += 2.2;
     position.y += 0.3;
+
+    position.y += ease_in_out_quadratic(sin(u_Time * 0.02)) * 0.2;
 
     vec4 modelposition = u_Model * position;   // Temporarily store the transformed vertex positions for use below
     fs_LightVec = lightPos - modelposition;  // Compute the direction in which the light source lies
