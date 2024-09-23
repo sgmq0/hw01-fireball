@@ -22,6 +22,7 @@ const controls = {
   'noise scale': 1,
   'noise amount': 5.0,
   'rim amount': 0.5,
+  'time scale': 1.0,
   buttonAction: function() {
     resetControls();
   }
@@ -35,6 +36,7 @@ function resetControls() {
   controls['noise scale'] = 1;
   controls['noise amount'] = 5.0;
   controls['rim amount'] = 0.5;
+  controls['time scale'] = 1.0;
 }
 
 let icosphere: Icosphere;
@@ -73,6 +75,7 @@ async function main() {
   gui.add(controls, 'noise scale', 0, 5).step(0.1);
   gui.add(controls, 'noise amount', 0, 10).step(0.1);
   gui.add(controls, 'rim amount', 0, 1).step(0.1);
+  gui.add(controls, 'time scale', 0, 2).step(0.05);
   gui.add(controls, 'buttonAction').name('Reset to default');
 
   // get canvas and webgl context
@@ -167,8 +170,8 @@ async function main() {
       icosphere.create();
     }
 
-    fireball.setTime(time);
-    lambert.setTime(time);
+    fireball.setTime(time * controls['time scale']);
+    lambert.setTime(time * controls['time scale']);
 
     var primary = vec4.fromValues(controls['primary color'][0] / 255, controls['primary color'][1]/255, controls['primary color'][2]/255, 1);
     var secondary = vec4.fromValues(controls['secondary color'][0] / 255, controls['secondary color'][1]/255, controls['secondary color'][2]/255, 1);
