@@ -8,7 +8,7 @@ import OpenGLRenderer from './rendering/gl/OpenGLRenderer';
 import Camera from './Camera';
 import {setGL} from './globals';
 import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
-import { big_text } from './big_text';
+import { torso1, torso2, scarf, shoulder, arms } from './big_text';
 
 // Define an object with application parameters and button callbacks
 // This will be referred to by dat.GUI's functions that add GUI elements.
@@ -90,17 +90,45 @@ async function main() {
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ do all the goofy obj stuff here ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // https://webgl2fundamentals.org/webgl/lessons/webgl-load-obj.html
-  const data = new OBJFile(big_text)
-  const parsed_data = data.parse();
-  
-  const new_data = parsed_data.models[0];
-  const positions = new_data.vertices;
-  const normals = new_data.vertexNormals;
-  const faces = new_data.faces;
-  console.log(new_data)
+  const torso = new OBJFile(torso1).parse();
+  const torso_array = torso.models[0];
+  let positions = torso_array.vertices;
+  let normals = torso_array.vertexNormals;
+  let faces = torso_array.faces;
+  let obj_torso = new Silly(vec3.fromValues(0,0,0), 1, positions, normals, faces);
+  obj_torso.create();
 
-  let silly = new Silly(vec3.fromValues(0,0,0), 1, positions, normals, faces);
-  silly.create();
+  const torso_bot = new OBJFile(torso2).parse();
+  const torso_array2 = torso_bot.models[0];
+  positions = torso_array2.vertices;
+  normals = torso_array2.vertexNormals;
+  faces = torso_array2.faces;
+  let obj_torso2 = new Silly(vec3.fromValues(0,0,0), 1, positions, normals, faces);
+  obj_torso2.create();
+
+  const scarf_file = new OBJFile(scarf).parse();
+  const scarf_array = scarf_file.models[0];
+  positions = scarf_array.vertices;
+  normals = scarf_array.vertexNormals;
+  faces = scarf_array.faces;
+  let obj_scarf = new Silly(vec3.fromValues(0,0,0), 1, positions, normals, faces);
+  obj_scarf.create();
+
+  const shoulder_file = new OBJFile(shoulder).parse();
+  const shoulder_array = shoulder_file.models[0];
+  positions = shoulder_array.vertices;
+  normals = shoulder_array.vertexNormals;
+  faces = shoulder_array.faces;
+  let obj_shoulder = new Silly(vec3.fromValues(0,0,0), 1, positions, normals, faces);
+  obj_shoulder.create();
+
+  const arms_file = new OBJFile(arms).parse();
+  const arms_array = arms_file.models[0];
+  positions = arms_array.vertices;
+  normals = arms_array.vertexNormals;
+  faces = arms_array.faces;
+  let obj_arms = new Silly(vec3.fromValues(0,0,0), 1, positions, normals, faces);
+  obj_arms.create();
 
   const camera = new Camera(vec3.fromValues(0, 0, 5), vec3.fromValues(0, 0, 0));
 
@@ -117,6 +145,11 @@ async function main() {
 
   const lambert = new ShaderProgram([
     new Shader(gl.VERTEX_SHADER, require('./shaders/lambert-vert.glsl')),
+    new Shader(gl.FRAGMENT_SHADER, require('./shaders/star-frag.glsl')),
+  ]);
+
+  const body = new ShaderProgram([
+    new Shader(gl.VERTEX_SHADER, require('./shaders/body-vert.glsl')),
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/lambert-frag.glsl')),
   ]);
 
@@ -156,12 +189,38 @@ async function main() {
 
     fireball.setViewDir(viewdir2);
     renderer.render(camera, fireball, [
-      
+      icosphere,
     ]);
 
     lambert.setPrimaryColor(star_color);
     renderer.render(camera, lambert, [
-      silly,
+      star,
+    ]);
+
+    body.setPrimaryColor(vec4.fromValues(58/255, 80/255, 80/255, 1.0));
+    renderer.render(camera, body, [
+      obj_torso
+    ]);
+
+
+    body.setPrimaryColor(vec4.fromValues(83/255, 8/255, 8/255, 1.0));
+    renderer.render(camera, body, [
+      obj_torso2
+    ]);
+
+    body.setPrimaryColor(vec4.fromValues(199/255, 22/255, 21/255, 1.0));
+    renderer.render(camera, body, [
+      obj_scarf
+    ]);
+
+    body.setPrimaryColor(vec4.fromValues(63/255, 85/255, 85/255, 1.0));
+    renderer.render(camera, body, [
+      obj_shoulder
+    ]);
+
+    body.setPrimaryColor(vec4.fromValues(99/255, 173/255, 164/255, 1.0));
+    renderer.render(camera, body, [
+      obj_arms
     ]);
 
     // Tell the browser to call `tick` again whenever it renders a new frame
