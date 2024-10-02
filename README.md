@@ -9,9 +9,11 @@ who up deading they cells
 - Noise amount: Changes how much of the head is colored with the tertiary (tip) color.
 - Rim amount: Changes the brightness of the glow on the rim.
 - Time scale: Changes the speed of animation. I added this in because the speed was drastically different on my desktop and my laptop...
+- Star mesh / star glow / body mesh: Enables and disables these respectively.
 
 <p align="center">
-  <img src="https://i.imgur.com/use9F1O.gif" />
+  <img src="https://i.imgur.com/use9F1O.gif" width=400/>
+  <img src="https://i.imgur.com/5sWIurK.png" width=470/>
 </p>
 
 ## Description
