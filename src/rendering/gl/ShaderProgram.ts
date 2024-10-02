@@ -39,6 +39,7 @@ class ShaderProgram {
   unifColorNoiseScale: WebGLUniformLocation;
   unifColorNoiseHeight: WebGLUniformLocation;
   unifRimAmount: WebGLUniformLocation;
+  unifIsGlowing: WebGLUniformLocation;
 
   constructor(shaders: Array<Shader>) {
     this.prog = gl.createProgram();
@@ -68,6 +69,7 @@ class ShaderProgram {
     this.unifColorNoiseScale  = gl.getUniformLocation(this.prog, "u_ColorNoiseScale");
     this.unifColorNoiseHeight  = gl.getUniformLocation(this.prog, "u_ColorNoiseHeight");
     this.unifRimAmount  = gl.getUniformLocation(this.prog, "u_RimAmount");
+    this.unifIsGlowing  = gl.getUniformLocation(this.prog, "u_IsGlowing");
   }
 
   use() {
@@ -165,6 +167,13 @@ class ShaderProgram {
     this.use();
     if (this.unifRimAmount !== -1) {
       gl.uniform1f(this.unifRimAmount, amount);
+    }
+  }
+
+  setIsGlowing(isGlowing: GLint) {
+    this.use();
+    if (this.unifIsGlowing !== -1) {
+      gl.uniform1i(this.unifIsGlowing, isGlowing);
     }
   }
 

@@ -20,6 +20,7 @@ uniform float u_Time;
 uniform float u_ColorNoiseScale;
 uniform float u_ColorNoiseHeight;
 uniform float u_RimAmount;
+uniform int u_IsGlowing;
 
 // These are the interpolated values out of the rasterizer, so you can't know
 // their specific values without knowing the vertices that contributed to them
@@ -253,7 +254,9 @@ void main()
     dist /= falloff;
     float glow_amt = mix(1.0,0.0, dist);
 
-    diffuseColor = mix(diffuseColor, u_ColorStar, glow_amt);
+    if (u_IsGlowing == 1) {
+      diffuseColor = mix(diffuseColor, u_ColorStar, glow_amt);
+    }
     
     vec4 result = vec4(diffuseColor.rgb, fresnel);
     out_Col = result;

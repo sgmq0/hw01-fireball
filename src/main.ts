@@ -23,6 +23,9 @@ const controls = {
   'noise amount': 5.0,
   'rim amount': 0.5,
   'time scale': 1.0,
+  'star': true,
+  'star glow': true,
+  'body': true,
   buttonAction: function() {
     resetControls();
   }
@@ -37,6 +40,9 @@ function resetControls() {
   controls['noise amount'] = 5.0;
   controls['rim amount'] = 0.5;
   controls['time scale'] = 1.0;
+  controls['star'] = true;
+  controls['star glow'] = true;
+  controls['body'] = true;
 }
 
 let icosphere: Icosphere;
@@ -77,6 +83,9 @@ async function main() {
   gui.add(controls, 'rim amount', 0, 1).step(0.1);
   gui.add(controls, 'time scale', 0, 2).step(0.05);
   gui.add(controls, 'buttonAction').name('Reset to default');
+  gui.add(controls, 'star').name('star mesh');
+  gui.add(controls, 'star glow').name('star glow');
+  gui.add(controls, 'body').name('body mesh');
 
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
@@ -186,6 +195,15 @@ async function main() {
     fireball.setColorNoiseHeight(controls['noise amount']);
     fireball.setRimAmount(controls['rim amount']);
 
+    var isGlowing;
+    if (controls['star glow']) {
+      isGlowing = 1;
+    } 
+    fireball.setIsGlowing(isGlowing);
+
+    var has_star = controls['star'];
+    var has_body = controls['body'];
+
     // get the viewdir of the camera
     let viewdir = vec3.create();
     vec3.subtract(viewdir, camera.controls.center, camera.controls.eye);
@@ -196,36 +214,39 @@ async function main() {
       icosphere,
     ]);
 
-    lambert.setPrimaryColor(star_color);
-    renderer.render(camera, lambert, [
-      star,
-    ]);
+    if (has_star) {
+      lambert.setPrimaryColor(star_color);
+      renderer.render(camera, lambert, [
+        star,
+      ]);
+    }
 
-    body.setPrimaryColor(vec4.fromValues(58/255, 80/255, 80/255, 1.0));
-    renderer.render(camera, body, [
-      obj_torso
-    ]);
+    if (has_body) {
+      body.setPrimaryColor(vec4.fromValues(58/255, 80/255, 80/255, 1.0));
+      renderer.render(camera, body, [
+        obj_torso
+      ]);
 
+      body.setPrimaryColor(vec4.fromValues(83/255, 8/255, 8/255, 1.0));
+      renderer.render(camera, body, [
+        obj_torso2
+      ]);
 
-    body.setPrimaryColor(vec4.fromValues(83/255, 8/255, 8/255, 1.0));
-    renderer.render(camera, body, [
-      obj_torso2
-    ]);
+      body.setPrimaryColor(vec4.fromValues(199/255, 22/255, 21/255, 1.0));
+      renderer.render(camera, body, [
+        obj_scarf
+      ]);
 
-    body.setPrimaryColor(vec4.fromValues(199/255, 22/255, 21/255, 1.0));
-    renderer.render(camera, body, [
-      obj_scarf
-    ]);
+      body.setPrimaryColor(vec4.fromValues(63/255, 85/255, 85/255, 1.0));
+      renderer.render(camera, body, [
+        obj_shoulder
+      ]);
 
-    body.setPrimaryColor(vec4.fromValues(63/255, 85/255, 85/255, 1.0));
-    renderer.render(camera, body, [
-      obj_shoulder
-    ]);
-
-    body.setPrimaryColor(vec4.fromValues(99/255, 173/255, 164/255, 1.0));
-    renderer.render(camera, body, [
-      obj_arms
-    ]);
+      body.setPrimaryColor(vec4.fromValues(99/255, 173/255, 164/255, 1.0));
+      renderer.render(camera, body, [
+        obj_arms
+      ]);
+    }
 
     // Tell the browser to call `tick` again whenever it renders a new frame
     requestAnimationFrame(tick);
